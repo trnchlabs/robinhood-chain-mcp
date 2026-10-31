@@ -1,7 +1,8 @@
-# Robinhood Chain MCP server
+# Robinhood Chain MCP server: rug checker and trading
 
 **Trade new Robinhood Chain tokens and memecoins from any AI agent, with rug and honeypot checks and the best DEX route.** Powered by [TRNCH](https://trnch.fun), a non-custodial trading terminal for Robinhood Chain (chainId 4663).
 
+- **Rug checker, no key**: `trnch_check` returns whether any Robinhood Chain token is kept out by TIA (rug, honeypot, scam contract, heavy sell tax, copycat, dump) and its public risk category. Every decision is public at <https://trnch.fun/tia>.
 - **New launches, live**: the Heat lists new Robinhood Chain tokens a few seconds after their pool is created.
 - **Rug and honeypot checks**: every launch is screened by TIA (Trnch Intelligence Agency). Rugs, honeypots, scam contracts, heavy sell taxes and copycats are kept out, and the API refuses to trade them.
 - **Best route**: each swap is quoted across six routers (KyberSwap, LI.FI, Uniswap, 0x, SushiSwap, 1inch).
@@ -43,12 +44,13 @@ Stdio-only client (Node 18+, no dependencies):
 }
 ```
 
-`trnch_stats` and the two `trnch_register` tools work without a key.
+`trnch_check`, `trnch_stats` and the two `trnch_register` tools work without a key.
 
 ## Tools
 
 | Tool | What it does |
 |---|---|
+| `trnch_check` | Is this Robinhood Chain token a rug? TIA verdict and public risk category for any token address (no key) |
 | `trnch_stats` | Live numbers over 24 hours: tokens spotted, kept out as High risk, rugs detected, median detection delay |
 | `trnch_register_message` | Message your wallet signs to get an API key |
 | `trnch_register` | Sends the signature, returns the key (shown once) |

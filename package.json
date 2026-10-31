@@ -1,6 +1,6 @@
 {
   "name": "robinhood-chain-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Robinhood Chain MCP server for AI agents: trade new Robinhood Chain memecoins with rug and honeypot checks and the best DEX route. Powered by TRNCH. Non-custodial.",
   "type": "module",
   "bin": {
@@ -24,7 +24,10 @@
     "sniper-bot",
     "rug-check",
     "honeypot-checker",
-    "dex-aggregator"
+    "dex-aggregator",
+    "rug-checker",
+    "token-scanner",
+    "scam-detector"
   ],
   "files": [
     "stdio.mjs",
