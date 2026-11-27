@@ -1,13 +1,13 @@
 # Robinhood Chain MCP server: rug checker and trading
 
-**Trade new Robinhood Chain tokens and memecoins from any AI agent, with rug and honeypot checks and the best DEX route.** Powered by [TRNCH](https://trnch.fun), a non-custodial trading terminal for Robinhood Chain (chainId 4663).
+**Robinhood Chain MCP server for AI agents: rug checker, wallet scan, alerts, Earn and best-route swaps.** Powered by [TRNCH](https://trnch.fun), a non-custodial trading terminal for Robinhood Chain (chainId 4663).
 
-- **Rug checker, no key**: `trnch_check` returns whether any Robinhood Chain token is kept out by TIA (rug, honeypot, scam contract, heavy sell tax, copycat, dump) and its public risk category. Every decision is public at <https://trnch.fun/tia>.
-- **New launches, live**: the Heat lists new Robinhood Chain tokens a few seconds after their pool is created.
-- **Rug and honeypot checks**: every launch is screened by TIA (Trnch Intelligence Agency). Rugs, honeypots, scam contracts, heavy sell taxes and copycats are kept out, and the API refuses to trade them.
-- **Best route**: each swap is quoted across six routers (KyberSwap, LI.FI, Uniswap, 0x, SushiSwap, 1inch).
+- **Rug checker, no key**: `trnch_check` returns whether any Robinhood Chain token is kept out by Trnch and its public risk category. Every decision is public at <https://trnch.fun/tia>.
+- **Wallet scan, no key**: `trnch_scan_wallet` checks everything a wallet holds.
+- **New launches, live**: the Heat lists new Robinhood Chain tokens a few seconds after their pool is created, screened by Trnch.
+- **Alerts and Earn**: a webhook when a held token is flagged, and USDG lending on Morpho markets (variable rates, liquidation applies).
+- **Best route**: each swap is quoted across eight routers (KyberSwap, LI.FI, Uniswap, 0x, SushiSwap, 1inch, Velora, Nordstern).
 - **Non-custodial**: the server returns a transaction, your agent's own wallet signs it. No funds or keys are ever held.
-- **0.5% per swap**, already deducted from every quote.
 
 ## Connect
 
@@ -37,28 +37,47 @@ Stdio-only client (Node 18+, no dependencies):
   "mcpServers": {
     "robinhood-chain": {
       "command": "npx",
-      "args": ["-y", "github:isonips/robinhood-chain-mcp"],
+      "args": ["-y", "github:trnchlabs/robinhood-chain-mcp"],
       "env": { "TRNCH_API_KEY": "trnch_bot_YOUR_KEY" }
     }
   }
 }
 ```
 
-`trnch_check`, `trnch_stats` and the two `trnch_register` tools work without a key.
+The free tools and the two `trnch_register` tools work without a key.
 
 ## Tools
 
-| Tool | What it does |
-|---|---|
-| `trnch_check` | Is this Robinhood Chain token a rug? TIA verdict and public risk category for any token address (no key) |
-| `trnch_stats` | Live numbers over 24 hours: tokens spotted, kept out as High risk, rugs detected, median detection delay |
-| `trnch_register_message` | Message your wallet signs to get an API key |
-| `trnch_register` | Sends the signature, returns the key (shown once) |
-| `trnch_heat` | New Robinhood Chain tokens, screened and ranked live |
-| `trnch_quote` | Quote a swap across six routers |
-| `trnch_buy` | Buy a token with USDG, returns the transaction to sign |
-| `trnch_sell` | Sell a token for USDG, by percent or amount |
-| `trnch_confirm` | Optional: report the tx hash |
+| Tool | Key | What it does |
+|---|---|---|
+| `trnch_check` | no | Rug and honeypot check of any Robinhood Chain token: status, public risk category, copycat link |
+| `trnch_scan_wallet` | no | Checks every ERC-20 a wallet holds in one call, flagged tokens first, with `canSell` and a sell hint |
+| `trnch_top_24h` | no | Best tokens that entered the Heat in the last 24 hours |
+| `trnch_stats` | no | Live public numbers for the last 24 hours |
+| `trnch_quote` | no | Quote a pair across eight routers, net of the Trnch fee |
+| `earn_markets` | no | Morpho markets lending USDG on Robinhood Chain, and the USDG vaults when open |
+| `earn_position` | no | Earn positions of a wallet, read on chain |
+| `earn_quote` | no | Summary of a borrow, a deposit or a Multiply before building it |
+| `trnch_register_message` | no | Message your wallet signs to get a key |
+| `trnch_register` | no | Sends the signature, returns the key (shown once) |
+| `trnch_heat` | yes | The live Heat: screened tokens as opaque ids with market numbers, plus newly spotted ones |
+| `trnch_buy` | yes | Build a buy (`tokenId` or `token`, `amountUsd` paid in USDG): returns the transaction to sign |
+| `trnch_sell` | yes | Build a sell for USDG, by `percent` or `amount` |
+| `trnch_confirm` | yes | Optional: report the tx hash so the volume counts for your Trnch account |
+| `trnch_alerts_subscribe` | yes | Signed webhook when a token a wallet holds is newly flagged |
+| `trnch_alerts_list` | yes | List your alert subscriptions |
+| `trnch_alerts_unsubscribe` | yes | Remove an alert subscription |
+| `earn_build` | yes | Build an Earn action (deposit, withdraw, borrow, repay, collateral, Multiply, vaults) for your wallet to sign |
+| `trnch_partner_fee_get` | partner | Read a partner's default integrator fee |
+| `trnch_partner_fee_set` | partner | Set it, 0 to 100 basis points |
+
+Every trade and Earn call returns transactions for your wallet to sign. Nothing is sent by Trnch.
+
+## Fees
+
+Swaps through the MCP server and the Bot API: 0.25% standard, 0.10% between major assets, 0.05% between a Stock Token and a major asset, 0.50% for tokens under 24 h old or with no known launch time. The rate is returned as `feeBps` and is already deducted from quotes.
+
+A Trnch partner can add an integrator fee (`integratorFeeBps`, 0 to 100 basis points, or its default fee with the `X-Trnch-Partner-Key` header). It is added to the Trnch fee and paid to the partner through the partner program once the swap is confirmed on chain.
 
 ## Get a key, no browser
 
@@ -66,7 +85,7 @@ Stdio-only client (Node 18+, no dependencies):
 2. Sign `message` with that wallet (`personal_sign`). No funds move.
 3. `POST https://trnch.fun/api/bot/v1/register` with `{ wallet, message, signature }` returns your `trnch_bot_...` key.
 
-The wallet needs 10 USDG or 0.004 ETH on Robinhood Chain.
+Up to 3 keys per wallet.
 
 ## Examples
 
@@ -86,10 +105,13 @@ The wallet needs 10 USDG or 0.004 ETH on Robinhood Chain.
 
 Shipping an agent to others? Set your TRNCH referral code (`ref`): every swap made with a key it creates pays you 25% of the TRNCH fee, for life.
 
-Framework integrations (ElizaOS, GOAT, Coinbase AgentKit) are in [isonips/trnch-mcp](https://github.com/isonips/trnch-mcp/tree/main/integrations).
+Framework integrations (ElizaOS, GOAT, Coinbase AgentKit) are in [trnchlabs/trnch-mcp](https://github.com/trnchlabs/trnch-mcp/tree/main/integrations).
 
 ## Links
 
+- Agents: <https://trnch.fun/agents>
+- Docs: <https://docs.trnch.fun>
+- Contracts: <https://github.com/trnchlabs/trnch-contracts>
 - Bot API docs: <https://trnch.fun/bot>
 - Agent guide: <https://trnch.fun/skill.md>
 - OpenAPI: <https://trnch.fun/openapi.json>

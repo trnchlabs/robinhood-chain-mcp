@@ -30,7 +30,7 @@ async function main() {
   const top = heat.heat[0];
   if (!top) return console.log("Heat is empty right now");
 
-  // 3. Buy $10 of it: TRNCH quotes six routers and returns the best route, ready to sign.
+  // 3. Buy $10 of it: TRNCH quotes eight routers and returns the best route, ready to sign.
   const buy = await (await fetch(`${API}/buy`, { method: "POST", headers: auth, body: JSON.stringify({ tokenId: top.id, amountUsd: 10 }) })).json();
   if (buy.error) throw new Error(buy.error);
   if (buy.approval) await wallet.sendTransaction({ to: buy.approval.to, data: buy.approval.data });
